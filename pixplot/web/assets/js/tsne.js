@@ -2169,11 +2169,6 @@ Values.prototype.init = function() {
   this.elems = {
     slider: document.querySelector('#values-container'),
   }
-  // remove the dom element if there is no date data
-  if (!data.json.layouts.values) {
-    this.elems.slider.style.display = 'none';
-    return;
-  }
   // dates domain, selected range, and filename to date map
   this.state = {
     data: {},
