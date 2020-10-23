@@ -2159,6 +2159,91 @@ Dates.prototype.addFilter = function() {
 }
 
 /**
+* Add value based layout and filtering
+**/
+
+function Values() {}
+
+Values.prototype.init = function() {
+  // set elems used below
+  this.elems = {
+    slider: document.querySelector('#values-container'),
+  }
+  // remove the dom element if there is no date data
+  if (!data.json.layouts.values) {
+    this.elems.slider.style.display = 'none';
+    return;
+  }
+  // dates domain, selected range, and filename to date map
+  this.state = {
+    data: {},
+    min: null,
+    max: null,
+    selected: [null, null],
+  }
+  // add the dates object to the filters for joint filtering
+  filters.filters.push(this);
+  // function for filtering images
+  this.imageSelected = function(image) {
+    return true;
+  };
+  // init
+  this.load();
+}
+
+Values.prototype.load = function() {
+  get(getPath(config.data.dir + '/metadata/values.json'), function(json) {
+    // set range slider domain
+    this.state.min = json.domain.min;
+    this.state.max = json.domain.max;
+    // store a map from image name to year
+    var keys = Object.keys(json.values);
+    keys.forEach(function(k) {
+      try {
+        var _k = parseInt(k);
+      } catch(err) {
+        var _k = k;
+      }
+      json.values[k].forEach(function(img) {
+        this.state.data[img] = _k;
+      }.bind(this))
+      this.imageSelected = function(image) {
+        var value = this.state.data[image];
+        // if the selected years are the starting domain, select all images
+        if (this.state.selected[0] == this.state.min &&
+            this.state.selected[1] == this.state.max) return true;
+        if (!value || !Number.isInteger(value)) return false;
+        return value >= this.state.selected[0] && value <= this.state.selected[1];
+      }
+    }.bind(this))
+    // add the filter now that the values have loaded
+    this.addFilter();
+  }.bind(this))
+}
+
+Values.prototype.addFilter = function() {
+  this.slider = noUiSlider.create(this.elems.slider, {
+    start: [this.state.min, this.state.max],
+    tooltips: [true, true],
+    step: 1,
+    behaviour: 'drag',
+    connect: true,
+    range: {
+      'min': this.state.min,
+      'max': this.state.max,
+    },
+    format: {
+      to: function (value) { return parseInt(value) },
+      from: function (value) { return parseInt(value) },
+    },
+  });
+  this.slider.on('update', function(values) {
+    this.state.selected = values;
+    filters.filterImages();
+  }.bind(this))
+}
+
+/**
 * Draw text into the scene
 **/
 
@@ -3405,6 +3490,7 @@ Welcome.prototype.startWorld = function() {
     picker.init();
     text.init();
     dates.init();
+    values.init();
     setTimeout(function() {
       requestAnimationFrame(function() {
         document.querySelector('#loader-scene').classList += 'hidden';
@@ -3785,6 +3871,7 @@ var layout = new Layout();
 var world = new World();
 var text = new Text();
 var dates = new Dates();
+var values = new Values();
 var lines = new Lines();
 var lod = new LOD();
 var settings = new Settings();
