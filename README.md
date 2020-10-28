@@ -119,6 +119,7 @@ The following column labels are accepted:
 | **permalink**    | a link to the image hosted on another domain            |
 | **year**         | a year timestamp for the image (should be an integer)   |
 | **label**        | a categorical label used for supervised UMAP projection |
+| **values**       | a numerical value that can be filtered on               |
 
 ## IIIF Images
 
